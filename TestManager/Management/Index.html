@@ -22,7 +22,7 @@
         </div>
         <div class="right section" v-if="activeFile != null">
             <!-- {{ activeFile }} -->
-            <div class="button-group">
+            <div class="button-group flex-w-full">
                 <button @click="run()">Run Test(s)<br />(Make sure to save)</button>
                 <button @click="save()">Save</button>
                 <button @click="cancel()">Reload</button>
@@ -74,7 +74,13 @@
             - Allow bulk running from UI
             - Test Case integration configured got config file in root directory
             - Plugin system for handlers somehow
-            `
+            - Copy to clipboard for run result
+            - Tabs on result section to view result friendlier (more per line)
+            - Readme documentation
+            - Create/Delete tsjson files for normal files
+            - Basic text editor for text files
+            - Copy full path of file on disk to clipboard
+            ` 
           },
           load(file) {
             if (file.type == "testfile")
@@ -187,6 +193,7 @@
             position: relative;
             margin-bottom: 0.2rem;
             box-sizing: border-box;
+            transition: scale 0.1s linear;
         }
 
         .fileentry .name {
@@ -200,6 +207,7 @@
 
         .fileentry:hover {
             border: 1px solid var(--clr-accent);
+            scale: 102%;
         }
 
         .title {
@@ -256,6 +264,10 @@
             min-width: 550px;
             color: var(--clr-font);
             background-color: var(--clr-bg2);
+        }
+
+        .flex-w-full > * {
+            flex: 1 0 auto;
         }
     </style>
 </body>
