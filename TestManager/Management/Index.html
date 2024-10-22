@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Test Manager</title>
+</head>
+<body>
+    <div class="container" v-scope @vue:mounted="mounted">
+        <div class="left section">
+            <div>
+                {{ currentPath }}
+            </div>
+            <div @click="up()">
+                ..
+            </div>
+            <div v-for="file in files" @click="load(file)">
+                [{{ file.type }}]{{ file.name }}
+            </div>
+        </div>
+        <div class="right section" v-if="activeFile != null">
+            <!-- {{ activeFile }} -->
+            <button @click="save()">Save</button>
+            <button @click="run()">Run</button>
+            
+            <button v-for="handler in activeFile.availableHandlers" @click="addHandler(handler)">
+                Add {{ handler.name }}
+            </button>
+
+            <div v-for="(handler, index) in activeFile.currentHandlers">
+                <h3>{{ handler.name }}</h3>
+                <button @click="removeHandler(index)">Remove</button>
+                <div v-for="param in handler.parameters">
+                    <div> {{ param.name }}</div>
+                    <input type="text" v-model="param.value"/>
+                </div>
+            </div>
+        </div>
+        <div class="bottom section">
+            <pre>{{ runResults }}</pre>
+        </div>
+    </div>
+    
+    
+    
+    
+    
+    
+    <script type="module">
+        import { createApp } from 'https://unpkg.com/petite-vue?module'
+      
+        createApp({
+          files: [],
+          activeFile: null,
+          loadedFile: "",
+          currentPath: "",
+          runResults: "",
+          mounted() {
+            this.getFiles();
+            this.runResults = `
+            TODOs
+            - View content files not just test files in explorer
+            - Spruce it up
+            - Allow bulk running from UI
+            - Test Case integration configured got config file in root directory
+            `
+          },
+          load(file) {
+            if (file.type == "testfile")
+            {
+                this.loadedFile = this.currentPath == "" ? file.name : this.currentPath + "/" + file.name;
+                fetch("http://localhost:5000/load?file="+this.loadedFile)
+                    .then((data) => data.json())
+                    .then(res => this.activeFile = res);
+            }
+            if (file.type == "folder")
+            {
+                this.activeFile = null;
+                this.runResults = "";
+                this.loadedFile = "";
+                this.currentPath += file.name;
+                this.getFiles();
+            }
+
+          },
+          save() {
+            const myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+
+            fetch("http://localhost:5000/save?file="+this.loadedFile, 
+                {
+                    method: "POST",
+                    body: JSON.stringify(this.activeFile.currentHandlers),
+                    headers: myHeaders,
+                });
+          },
+          getFiles() {
+            fetch("http://localhost:5000/get-files" + (this.currentPath == "" ? "" : "?path=" + this.currentPath))
+                .then((data) => data.json())
+                .then(res => this.files = res);
+          },
+          up() {
+            this.activeFile = null;
+            this.runResults = "";
+            this.loadedFile = "";
+            this.currentPath = this.currentPath.substring(0, this.currentPath.lastIndexOf("/"));
+            this.getFiles();
+          },
+          addHandler(handler) {
+            this.activeFile.currentHandlers.unshift(JSON.parse(JSON.stringify(handler)))
+          },
+          removeHandler(index) {
+            this.activeFile.currentHandlers.splice(index, 1);
+          },
+          run() {
+            fetch("http://localhost:5000/run?file="+this.loadedFile, 
+                {
+                    method: "POST"
+                })                
+                .then(data => data.json())
+                .then(res => this.runResults = JSON.stringify(res, null, 2));
+          }
+        }).mount()
+      </script>
+    <style>
+        body, html {
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 3fr 1fr;
+            height: 100vh;
+            width: 100%;
+            align-content: stretch;
+        }
+
+        .section {
+            border: 1px solid black;
+            overflow-y: scroll;
+        }
+
+        .bottom {
+            grid-column: span 2;
+        }
+    </style>
+</body>
+</html>
