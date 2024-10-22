@@ -18,11 +18,11 @@ internal class FileFinder
         return _root.GetFiles("*.tsjson", SearchOption.AllDirectories);
     }
 
-    internal IEnumerable<Entry> GetTestFilesAndFolders(string? path)
+    internal IEnumerable<Entry> GetDirectoryContents(string? path)
     {
         var searchDir = path is null ? _root : new DirectoryInfo(Path.Combine(_root.FullName, path));
 
-        return searchDir.GetDirectories().Select(fi => new Entry("folder", fi.Name)).Union(searchDir.GetFiles("*.tsjson", SearchOption.TopDirectoryOnly).Select(fi => new Entry("testfile", fi.Name)));
+        return searchDir.GetDirectories().Select(fi => new Entry("folder", fi.Name)).Union(searchDir.GetFiles().Select(fi => new Entry(fi.Name.EndsWith(".tsjson") ? "testfile" : "file", fi.Name)));
     }
 
     internal IEnumerable<FileInfo> GetMatchingTestFiles(string pattern)

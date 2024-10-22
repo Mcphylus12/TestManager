@@ -2,13 +2,11 @@
   "profiles": {
     "Manage": {
       "commandName": "Project",
-      "commandLineArgs": "manage -r \"Data\"",
-      "workingDirectory": "C:\\Users\\mcphy\\source\\repos\\TestManager\\Tests"
+      "commandLineArgs": "manage -r \"../../../../../Tests/Data\""
     },
     "Bulk": {
       "commandName": "Project",
-      "commandLineArgs": "bulk -r \"Data\"",
-      "workingDirectory": "C:\\Users\\mcphy\\source\\repos\\TestManager\\Tests"
+      "commandLineArgs": "bulk -r \"../../../../../Tests/Data\""
     }
   }
 }

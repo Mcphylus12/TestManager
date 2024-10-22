@@ -1,10 +1,10 @@
 [
   {
-    "Type": "len",
+    "Type": "SHA256",
     "File": null,
     "Name": null,
     "Parameters": {
-      "ExpectedLength": "10"
+      "ExpectedHash": "Wrong"
     }
   }
 ]

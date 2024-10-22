@@ -7,33 +7,44 @@
     <title>Test Manager</title>
 </head>
 <body>
+    <h2 class="title">Test Manager</h2>
     <div class="container" v-scope @vue:mounted="mounted">
         <div class="left section">
-            <div>
-                {{ currentPath }}
+            <h3>
+                Path: /{{ currentPath }}
+            </h3>
+            <div class="fileentry up" @click="up()">
+                [folder] <span class="name">..</span> 
             </div>
-            <div @click="up()">
-                ..
-            </div>
-            <div v-for="file in files" @click="load(file)">
-                [{{ file.type }}]{{ file.name }}
+            <div class="fileentry" :class="file.type" v-for="file in files" @click="load(file)">
+                [{{ file.type }}]<span class="name">{{ file.name }}</span>
             </div>
         </div>
         <div class="right section" v-if="activeFile != null">
             <!-- {{ activeFile }} -->
-            <button @click="save()">Save</button>
-            <button @click="run()">Run</button>
+            <div class="button-group">
+                <button @click="run()">Run Test(s)<br />(Make sure to save)</button>
+                <button @click="save()">Save</button>
+                <button @click="cancel()">Reload</button>
+            </div>
             
-            <button v-for="handler in activeFile.availableHandlers" @click="addHandler(handler)">
-                Add {{ handler.name }}
-            </button>
+            <h3>Add new Tests</h3>
 
-            <div v-for="(handler, index) in activeFile.currentHandlers">
-                <h3>{{ handler.name }}</h3>
-                <button @click="removeHandler(index)">Remove</button>
+            <div class="button-group">
+                <button v-for="handler in activeFile.availableHandlers" @click="addHandler(handler)">
+                    Add {{ handler.name }}
+                </button>
+            </div>
+
+            <div class="handler" v-for="(handler, index) in activeFile.currentHandlers">
+                <h4>
+                    {{ handler.name }}
+
+                    <button class="float-right" @click="removeHandler(index)">Remove</button>
+                </h4>
                 <div v-for="param in handler.parameters">
                     <div> {{ param.name }}</div>
-                    <input type="text" v-model="param.value"/>
+                    <textarea type="text" v-model="param.value" ></textarea>
                 </div>
             </div>
         </div>
@@ -60,7 +71,6 @@
             this.getFiles();
             this.runResults = `
             TODOs
-            - View content files not just test files in explorer
             - Spruce it up
             - Allow bulk running from UI
             - Test Case integration configured got config file in root directory
@@ -79,7 +89,7 @@
                 this.activeFile = null;
                 this.runResults = "";
                 this.loadedFile = "";
-                this.currentPath += file.name;
+                this.currentPath += file.name + "/";
                 this.getFiles();
             }
 
@@ -104,7 +114,10 @@
             this.activeFile = null;
             this.runResults = "";
             this.loadedFile = "";
-            this.currentPath = this.currentPath.substring(0, this.currentPath.lastIndexOf("/"));
+            do 
+            {
+                this.currentPath = this.currentPath.slice(0, -1);
+            } while (!this.currentPath.endsWith("/") && this.currentPath != "");
             this.getFiles();
           },
           addHandler(handler) {
@@ -120,6 +133,11 @@
                 })                
                 .then(data => data.json())
                 .then(res => this.runResults = JSON.stringify(res, null, 2));
+          },
+          cancel() {
+                fetch("http://localhost:5000/load?file="+this.loadedFile)
+                    .then((data) => data.json())
+                    .then(res => this.activeFile = res);
           }
         }).mount()
       </script>
@@ -127,6 +145,14 @@
         body, html {
             padding: 0;
             margin: 0;
+            font-family: system-ui;
+            --clr-bg: #121212;
+            --clr-bg2: #282828;
+            --clr-font: #cacaca;
+            --clr-accent: #23c73e;
+            --clr-dark-accent: #18741d;
+            color: var(--clr-font);
+            font-size: larger;
         }
 
         .container {
@@ -136,15 +162,100 @@
             height: 100vh;
             width: 100%;
             align-content: stretch;
+            background-color: var(--clr-bg);
         }
 
         .section {
-            border: 1px solid black;
+            border: 1px solid var(--clr-accent);
             overflow-y: scroll;
+            padding: 0.5rem;
         }
 
         .bottom {
             grid-column: span 2;
+        }
+
+        .testfile, .folder, .up {
+            cursor: pointer;
+        }
+
+        .file {
+            cursor: default;
+        }
+
+        .fileentry {
+            position: relative;
+            margin-bottom: 0.2rem;
+            box-sizing: border-box;
+        }
+
+        .fileentry .name {
+            position: absolute;
+            left: 5rem;
+        }
+
+        .fileentry:nth-child(odd) {
+            background-color: var(--clr-bg2);
+        }
+
+        .fileentry:hover {
+            border: 1px solid var(--clr-accent);
+        }
+
+        .title {
+            background-color: var(--clr-bg);
+            text-align: center;
+            margin: 0;
+            padding: 1.5rem;
+            color: var(--clr-accent);
+        }
+
+        button {
+            background-color: var(--clr-dark-accent); /* Green */
+            border: none;
+            color: var(--clr-font);
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            transition: all .1s ease-in;
+            font-size: inherit;
+        }
+
+        button:hover {
+            filter: brightness(80%);
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            align-items: stretch;
+        }
+
+        .mb-1 {
+            margin-bottom: 1rem;
+        }
+
+        .float-right {
+            float: right;
+        }
+
+        .handler {
+            border-top: 1px solid var(--clr-accent);
+            margin-top: 0.5rem;
+        }
+
+        .handler h4 {
+            margin-top: 0.25rem;
+        }
+
+        .handler textarea {
+            font-size: larger;
+            width: 550px;
+            min-width: 550px;
+            color: var(--clr-font);
+            background-color: var(--clr-bg2);
         }
     </style>
 </body>

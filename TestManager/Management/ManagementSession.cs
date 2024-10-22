@@ -25,7 +25,7 @@ public class ManagementSession
 
     public IEnumerable<Entry> GetFiles(string? path = null)
     {
-        return _fileFinder.GetTestFilesAndFolders(path);
+        return _fileFinder.GetDirectoryContents(path);
     }
 
     public async Task<TestForm> Load(string file)
