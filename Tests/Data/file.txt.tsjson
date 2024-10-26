@@ -4,7 +4,7 @@
     "File": null,
     "Name": "lengthTest",
     "Parameters": {
-      "ExpectedLength": "15"
+      "ExpectedLength": "16"
     },
     "IntegrationParameter": {
       "Id": "8",
@@ -19,7 +19,8 @@
     "Parameters": {},
     "IntegrationParameter": {
       "Id": "",
-      "Description": ""
+      "Description": "",
+      "Description2": ""
     }
   },
   {
@@ -31,7 +32,8 @@
     },
     "IntegrationParameter": {
       "Id": "",
-      "Description": ""
+      "Description": "",
+      "Description2": ""
     }
   }
 ]

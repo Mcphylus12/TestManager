@@ -1,4 +1,6 @@
-﻿namespace TestManager.PluginLib;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TestManager.PluginLib;
 public interface ITestHandler
 {
     public string Type { get; }
@@ -11,11 +13,13 @@ public interface ITestHandler<T> : ITestHandler
 
 public interface ITestParameters<T>
 {
-    T Parameters { get; set; }
-    byte[]? File { get; set; }
-    string FileName { get; set; }
-    string TestName { get; set; }
+    T Parameters { get; }
+    byte[]? File { get; }
+    string FileName { get; }
+    string TestName { get; }
+    ISecretLoader SecretLoader { get; }
 
+    [MemberNotNull(nameof(File))]
     void EnsureFile();
     void EnsureFileName();
 }

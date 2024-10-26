@@ -10,7 +10,7 @@ public class BasicTests
     [Fact]
     public async Task BulkTestWorks()
     {
-        var loader = new PluginLoader(new DirectoryInfo("."));
+        var loader = new PluginLoader(new DirectoryInfo("."), new SecretLoader());
         loader.AddAssembly(Assembly.GetAssembly(typeof(DummyHandler))!);
         using var tw = new StringWriter();
         var ogOut = Console.Out;

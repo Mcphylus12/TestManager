@@ -22,7 +22,7 @@ internal class FileFinder
     {
         var searchDir = path is null ? _root : new DirectoryInfo(Path.Combine(_root.FullName, path));
 
-        return searchDir.GetDirectories().Select(fi => new Entry("folder", fi.Name)).Union(searchDir.GetFiles().Select(fi => new Entry(fi.Name.EndsWith(".tsjson") ? "testfile" : "file", fi.Name)));
+        return searchDir.GetDirectories().Select(fi => new Entry("folder", fi.Name, string.Empty)).Union(searchDir.GetFiles().Select(fi => new Entry(fi.Name.EndsWith(".tsjson") ? "testfile" : "file", fi.Name, string.Empty)));
     }
 
     internal IEnumerable<FileInfo> GetMatchingTestFiles(string pattern)
@@ -34,4 +34,4 @@ internal class FileFinder
     }
 }
 
-public record class Entry(string Type, string Name);
+public record class Entry(string Type, string Name, string Path);

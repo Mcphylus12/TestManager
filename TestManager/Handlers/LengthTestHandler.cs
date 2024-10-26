@@ -9,7 +9,7 @@ internal class LengthTestHandler : ITestHandler<LengthData>
     {
         testParameters.EnsureFile();
 
-        testResult.AddResult("length_check", testParameters.Parameters.ExpectedLength, testParameters.File.LongLength);
+        testResult.AddResult("length_check", testParameters.Parameters.ExpectedLength, testParameters.File!.LongLength);
         return Task.CompletedTask;
     }
 }

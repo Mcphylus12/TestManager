@@ -6,10 +6,10 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Test Manager</title>
 </head>
-<body>
-    <h2 class="title">Test Manager</h2>
-    <div class="container" v-scope @vue:mounted="mounted">
-        <div class="left section">
+<body v-scope @vue:mounted="mounted">
+    <h2 class="title" @click="toggle()">Test Manager</h2>
+    <div class="container" >
+        <div class="left section" v-if="mode == 'file'">
             <h3>
                 Path: /{{ currentPath }}
             </h3>
@@ -18,6 +18,18 @@
             </div>
             <div class="fileentry" :class="file.type" v-for="file in files" @click="load(file)">
                 [{{ file.type }}]<span class="name">{{ file.name }}</span>
+            </div>
+        </div>
+        <div class="left section" v-if="mode == 'bulk'">
+            <h3>
+                Pattern: <input type="text" v-model="currentPath" />
+            </h3>
+            <div class="button-group flex-w-full">
+                <button @click="getFiles()">Load</button>
+                <button @click="bulkRun()">Run</button>
+            </div>
+            <div class="fileentry" :class="file.type" v-for="file in files" @click="load(file)">
+                {{ file.path }}/{{ file.name }}
             </div>
         </div>
         <div class="right section" v-if="activeFile != null">
@@ -69,6 +81,7 @@
         import { createApp } from 'https://unpkg.com/petite-vue?module'
       
         createApp({
+          mode: "file",
           files: [],
           activeFile: null,
           loadedFile: "",
@@ -78,7 +91,6 @@
             this.getFiles();
             this.runResults = `
             TODOs
-            - Allow bulk running from UI
 
             - Copy to clipboard for run result
             - Tabs on result section to view result friendlier (more per line)
@@ -88,14 +100,16 @@
             - Create/Delete tsjson files for normal files
             - Basic text editor for text files
             - Copy full path of file on disk to clipboard
-            
-            - secret loading for bulk and manage to allow for test integrations and handlers that need it (pull from env or read from console)
             ` 
           },
           load(file) {
             if (file.type == "testfile")
             {
-                this.loadedFile = this.currentPath == "" ? file.name : this.currentPath + "/" + file.name;
+                if (this.mode == 'file') {
+                    this.loadedFile = this.currentPath == "" ? file.name : this.currentPath + "/" + file.name;
+                } else if (this.mode == "bulk") {
+                    this.loadedFile = file.path + "/" + file.name;
+                }
                 fetch("http://localhost:5000/load?file="+this.loadedFile)
                     .then((data) => data.json())
                     .then(res => this.activeFile = res);
@@ -122,9 +136,9 @@
                 });
           },
           getFiles() {
-            fetch("http://localhost:5000/get-files" + (this.currentPath == "" ? "" : "?path=" + this.currentPath))
-                .then((data) => data.json())
-                .then(res => this.files = res);
+                fetch(`http://localhost:5000/get-files?path=${this.currentPath}&mode=${this.mode}`)
+                    .then((data) => data.json())
+                    .then(res => this.files = res);
           },
           up() {
             this.activeFile = null;
@@ -149,12 +163,33 @@
                 })                
                 .then(data => data.json())
                 .then(res => this.runResults = JSON.stringify(res, null, 2));
-          },
+            },
+            bulkRun() {
+                fetch("http://localhost:5000/bulkrun?pattern=" + this.currentPath,
+                    {
+                        method: "POST"
+                    })
+                    .then(data => data.json())
+                    .then(res => this.runResults = JSON.stringify(res, null, 2));
+            },
           cancel() {
                 fetch("http://localhost:5000/load?file="+this.loadedFile)
                     .then((data) => data.json())
                     .then(res => this.activeFile = res);
-          }
+            },
+            toggle() {
+                this.activeFile = null;
+                this.runResults = "";
+                this.loadedFile = "";
+                this.currentPath = "";
+                this.files = [];
+                if (this.mode == "file") {
+                    this.mode = "bulk";
+                } else if (this.mode == "bulk") {
+                    this.mode = "file";
+                    this.getFiles();
+                }
+            }
         }).mount()
       </script>
     <style>

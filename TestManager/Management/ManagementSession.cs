@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using TestManager.FileTraversal;
 using TestManager.PluginLib;
 using TestManager.Testing;
@@ -15,20 +16,33 @@ public class ManagementSession
     private readonly FormGenerator _formGenerator;
     private readonly TestRunner _runner;
 
-    public ManagementSession(DirectoryInfo root, Dictionary<string, ITestHandler> handlers, ITestResultIntegrator? integrator)
+    public ManagementSession(DirectoryInfo root, Dictionary<string, ITestHandler> handlers, ITestResultIntegrator? integrator, ISecretLoader secretLoader)
     {
         _root = root;
         _integrator = integrator;
         _fileFinder = new FileFinder(root);
         _options = new JsonSerializerOptions { WriteIndented = true };
-        _loader = new TestLoader(handlers, root);
+        _loader = new TestLoader(handlers, root, secretLoader);
         _formGenerator = new FormGenerator(handlers);
         _runner = new TestRunner();
     }
 
-    public IEnumerable<Entry> GetFiles(string? path = null)
+    public IEnumerable<Entry> GetFiles(string mode, string? path = null)
     {
-        return _fileFinder.GetDirectoryContents(path);
+        if (mode == "file")
+        {
+            return _fileFinder.GetDirectoryContents(path);
+        }
+        else if (mode == "bulk")
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new NotSupportedException("need to supploy a path for bulk");
+            }
+
+            return _fileFinder.GetMatchingTestFiles(path).Select(fi => new Entry("testfile", fi.Name, Path.GetRelativePath(_root.FullName, fi.Directory.FullName).Replace('\\', '/')));
+        }
+        throw new NotSupportedException("unsupported mode");
     }
 
     public async Task<TestForm> Load(string file)
@@ -52,6 +66,14 @@ public class ManagementSession
 
         await (_integrator?.SubmitResults(result.TestResults) ?? Task.CompletedTask);
 
+        return result.ToJson()!;
+    }
+
+    internal async Task<string> BulkRun(string pattern)
+    {
+        var files = _fileFinder.GetMatchingTestFiles(pattern);
+        var tests = await _loader.LoadTests(files);
+        var result = await _runner.RunTests(tests);
         return result.ToJson()!;
     }
 }

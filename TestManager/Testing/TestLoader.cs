@@ -8,12 +8,14 @@ internal class TestLoader
 {
     private readonly Dictionary<string, ITestHandler> _handlers;
     private readonly DirectoryInfo _root;
+    private readonly ISecretLoader _secretLoader;
     private readonly FileLoader _loader;
 
-    public TestLoader(Dictionary<string, ITestHandler> handlers, DirectoryInfo root)
+    public TestLoader(Dictionary<string, ITestHandler> handlers, DirectoryInfo root, ISecretLoader secretLoader)
     {
         _handlers = handlers;
         _root = root;
+        _secretLoader = secretLoader;
         _loader = new FileLoader();
     }
 
@@ -59,7 +61,7 @@ internal class TestLoader
                 tests.AddRange(testJson.Deserialize<IEnumerable<TsJsonContract>>()!);
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // TODO: results.Add(new TestResult(file).AddResult("file_load_error", false, ex.ToString()));
         }
@@ -80,7 +82,7 @@ internal class TestLoader
             var handler = _handlers[s.Type];
             var paramType = handler.GetType().GetInterfaces().Single(t => t.Name == "ITestHandler`1").GetGenericArguments()[0];
             var pparams = (ITestParametersSetup)Activator.CreateInstance(typeof(TestParameters<>).MakeGenericType(paramType))!;
-            pparams.Setup(s, i, testPath, filePath, adjacentFile, _loader);
+            pparams.Setup(s, i, testPath, filePath, adjacentFile, _loader, _secretLoader);
 
             return (ITest)Activator.CreateInstance(typeof(Test<>).MakeGenericType(paramType), handler, pparams)!;
         }
@@ -166,6 +168,7 @@ internal class FailedTest : ITest
 public class TestParameters<T> : ITestParametersSetup, ITestParameters<T>
 {
     public byte[]? File { get; set; }
+    public required ISecretLoader SecretLoader { get; set; }
     public required string FileName { get; set; }
     public required string TestName { get; set; }
     public required T Parameters { get; set; }
@@ -189,15 +192,16 @@ public class TestParameters<T> : ITestParametersSetup, ITestParameters<T>
     }
 
     private static readonly JsonSerializerOptions _options = new JsonSerializerOptions() { NumberHandling = JsonNumberHandling.AllowReadingFromString };
-    public void Setup(TsJsonContract s, int i, string testPath, string? filePath, string adjacentFile, FileLoader fl)
+    public void Setup(TsJsonContract s, int i, string testPath, string? filePath, string adjacentFile, FileLoader fl, ISecretLoader secretLoader)
     {
         FileName = filePath ?? adjacentFile;
         Parameters = s.Parameters.Deserialize<T>(_options)!;
         TestName = s.Name ?? $"{testPath}:{i}";
         File = fl.Load(filePath ?? adjacentFile);
+        SecretLoader = secretLoader;
     }
 }
 public interface ITestParametersSetup
 {
-    void Setup(TsJsonContract s, int i, string testPath, string? filePath, string adjacentFile, FileLoader fl);
+    void Setup(TsJsonContract s, int i, string testPath, string? filePath, string adjacentFile, FileLoader fl, ISecretLoader secretLoader);
 }

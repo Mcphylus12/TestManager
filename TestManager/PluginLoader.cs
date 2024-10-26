@@ -9,11 +9,13 @@ public class PluginLoader
 {
     private static List<Assembly> _assemblies = new List<Assembly>();
     private readonly DirectoryInfo _directoryInfo;
+    private readonly ISecretLoader _secretLoader;
 
-    public PluginLoader(DirectoryInfo root)
+    public PluginLoader(DirectoryInfo root, ISecretLoader secretLoader)
     {
         AddAssembly(Assembly.GetEntryAssembly()!);
         _directoryInfo = root;
+        _secretLoader = secretLoader;
         LoadPlugins(root);
     }
 
@@ -35,28 +37,30 @@ public class PluginLoader
     {
         var types = _assemblies.SelectMany(a => a.GetTypes().Where(t => t.IsClass && t.IsAssignableTo(typeof(ITestResultIntegrator)))).ToArray();
 
+        var config = LoadIntegratorConfig();
+
         integrator = types.Length switch
         {
             0 => null,
-            1 => (ITestResultIntegrator)Activator.CreateInstance(types[0])!,
+            1 => ITestResultIntegrator.Create(types[0], config, _secretLoader),
             _ => throw new NotSupportedException("Multiple test result integrators are not supported as plugins")
         };
 
-        if (integrator is not null)
+        return integrator != null;
+    }
+
+    private Dictionary<string, string>? LoadIntegratorConfig()
+    {
+        var config = new FileInfo(Path.Combine(_directoryInfo.FullName, ".config", "integrator.json"));
+
+        if (config.Exists)
         {
-            var config = new FileInfo(Path.Combine(_directoryInfo.FullName, ".config", "integrator.json"));
+            var rawConfig = File.ReadAllText(config.FullName);
 
-            if (config.Exists)
-            {
-                var rawConfig = File.ReadAllText(config.FullName);
-
-                integrator.Configure(JsonSerializer.Deserialize<Dictionary<string, string>>(rawConfig)!);
-            }
-
-            Console.WriteLine("Loading TestResultIntegrator: " + types[0].FullName);
+            return JsonSerializer.Deserialize<Dictionary<string, string>>(rawConfig)!;
         }
 
-        return integrator != null;
+        return null;
     }
 
     private void LoadPlugins(DirectoryInfo info)

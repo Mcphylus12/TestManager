@@ -2,7 +2,6 @@
 using System.CommandLine;
 using TestManager.Management;
 using TestManager.PluginLib;
-using TestManager.Testing;
 
 namespace TestManager;
 
@@ -18,7 +17,8 @@ public class ManageCommand
 
     private static async Task Run(DirectoryInfo info, bool? submit)
     {
-        var loader = new PluginLoader(info);
+        var secretLoader = new SecretLoader();
+        var loader = new PluginLoader(info, secretLoader);
 
         ITestResultIntegrator? integrator = null;
         if (submit.GetValueOrDefault())
@@ -26,7 +26,7 @@ public class ManageCommand
             loader.GetIntegrator(out integrator);
         }
 
-        var manSession = new ManagementSession(info, loader.GetHandlers(), integrator);
+        var manSession = new ManagementSession(info, loader.GetHandlers(), integrator, new SecretLoader());
         await ManagementHost.Run(manSession);
     }
 }

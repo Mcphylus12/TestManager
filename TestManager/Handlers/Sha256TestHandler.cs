@@ -1,6 +1,5 @@
 ﻿using System.Security.Cryptography;
 using TestManager.PluginLib;
-using TestManager.Testing;
 
 namespace TestManager.Handlers;
 internal class Sha256TestHandler : ITestHandler<HashConfig>
@@ -10,7 +9,7 @@ internal class Sha256TestHandler : ITestHandler<HashConfig>
     public Task RunTest(ITestParameters<HashConfig> testParameters, TestResult testResult)
     {
         testParameters.EnsureFile();
-        var hash = SHA256.HashData(testParameters.File);
+        var hash = SHA256.HashData(testParameters.File!);
         var hashString = Convert.ToHexString(hash);
         testResult.AddResult("hashes_match", testParameters.Parameters.ExpectedHash, hashString);
         return Task.CompletedTask;
