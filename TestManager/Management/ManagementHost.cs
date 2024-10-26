@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using TestManager.FileTraversal;
 
 namespace TestManager.Management;
 public static class ManagementHost
@@ -25,8 +26,8 @@ public static class ManagementHost
         app.MapPost("/bulkrun", (string pattern) => managementSession.BulkRun(pattern));
         app.MapGet("/load", (string file) => managementSession.Load(file));
         app.MapPost("/save", (string file, [FromBody] HandlerForm[] data) => managementSession.Save(file, data));
-
-
+        app.MapDelete("/testfile", (string file) => managementSession.DeleteTestFile(file));
+        app.MapPost("/testfile", ([FromBody] Entry newFile) => managementSession.CreateTestFile(newFile) ? Results.Ok() : Results.Conflict());
 
         await app.RunAsync();
     }

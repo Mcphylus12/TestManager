@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Test Manager</title>
 </head>
-<body v-scope @vue:mounted="mounted">
+<body v-scope @vue:mounted="mounted" v-cloak>
     <h2 class="title" @click="toggle()">Test Manager</h2>
     <div class="container" >
         <div class="left section" v-if="mode == 'file'">
@@ -17,7 +17,7 @@
                 [folder] <span class="name">..</span> 
             </div>
             <div class="fileentry" :class="file.type" v-for="file in files" @click="load(file)">
-                [{{ file.type }}]<span class="name">{{ file.name }}</span>
+                [{{ file.type }}]<span class="name">{{ file.name }}</span><span v-if="file.type == 'file'" class="new-link" @click="createTestFile(file)">create test file</span>
             </div>
         </div>
         <div class="left section" v-if="mode == 'bulk'">
@@ -29,17 +29,21 @@
                 <button @click="bulkRun()">Run</button>
             </div>
             <div class="fileentry" :class="file.type" v-for="file in files" @click="load(file)">
-                {{ file.path }}/{{ file.name }}
+                [{{ file.type }}]<span class="name">{{ file.path }}/{{ file.name }}</span><span v-if="file.type == 'file'" class="new-link" @click="createTestFile(file)">create test file</span>
             </div>
         </div>
         <div class="right section" v-if="activeFile != null">
             <!-- {{ activeFile }} -->
-            <div class="button-group flex-w-full">
+            <div class="button-group flex-w-full mb-half">
                 <button @click="run()">Run Test(s)<br />(Make sure to save)</button>
                 <button @click="save()">Save</button>
                 <button @click="cancel()">Reload</button>
             </div>
-            
+            <div class="button-group flex-w-full">
+                <button @click="clipBoard(loadedFile)">Get Location</button>
+                <button @click="deleteTestFile()">Delete Test File (Careful theres no confirmation)</button>
+            </div>
+
             <h3>Add new Tests</h3>
 
             <div class="button-group">
@@ -55,11 +59,11 @@
                     <button class="float-right" @click="removeHandler(index)">Remove</button>
                 </h4>
                 <details>
-                <summary>Test Integration Information</summary>
-                <div v-for="param in activeFile.integrationParameters">
-                    <div> {{ param }}</div>
-                    <input type="text" v-model="handler.testIntegrationParameters[param]" />
-                </div>
+                    <summary>Test Integration Information</summary>
+                    <div v-for="param in activeFile.integrationParameters">
+                        <div> {{ param }}</div>
+                        <input type="text" v-model="handler.testIntegrationParameters[param]" />
+                    </div>
                 </details>
                 <div v-for="param in handler.parameters">
                     <div> {{ param.name }}</div>
@@ -67,7 +71,10 @@
                 </div>
             </div>
         </div>
-        <div class="bottom section">
+        <div class="bottom section relative">
+            <button @click="clipBoard(runResults)" class="abs-top-right">
+                Copy
+            </button>
             <pre>{{ runResults }}</pre>
         </div>
     </div>
@@ -92,14 +99,13 @@
             this.runResults = `
             TODOs
 
-            - Copy to clipboard for run result
             - Tabs on result section to view result friendlier (more per line)
 
             - Readme documentation
 
-            - Create/Delete tsjson files for normal files
             - Basic text editor for text files
-            - Copy full path of file on disk to clipboard
+
+            - test information available inside result for better verbosity for integrators
             ` 
           },
           load(file) {
@@ -122,7 +128,6 @@
                 this.currentPath += file.name + "/";
                 this.getFiles();
             }
-
           },
           save() {
             const myHeaders = new Headers();
@@ -189,6 +194,36 @@
                     this.mode = "file";
                     this.getFiles();
                 }
+            },
+            clipBoard(text) {
+                window.navigator.clipboard.writeText(text);
+            },
+            deleteTestFile() {
+                fetch("http://localhost:5000/testfile?file=" + this.loadedFile,
+                    {
+                        method: "DELETE"
+                    })
+                    .then(res => {
+                        this.loadedFile = "";
+                        this.getFiles();
+                    });
+            },
+            createTestFile(file) {
+                const myHeaders = new Headers();
+                myHeaders.append("Content-Type", "application/json");
+
+                fetch("http://localhost:5000/testfile", 
+                    {
+                        method: "POST",
+                        body: JSON.stringify(file),
+                        headers: myHeaders,
+                    })
+                    .then(res => {
+                        if (res.ok) {
+                            this.loadedFile = "";
+                            this.getFiles();
+                        }
+                    });
             }
         }).mount()
       </script>
@@ -246,6 +281,20 @@
             left: 5rem;
         }
 
+        .fileentry .new-link {
+            position: absolute;
+            right: 0.5rem;
+            cursor: pointer;
+            transition: all 0.1s linear;
+            display: inline;
+            padding: 0 4px;
+        }
+
+        .fileentry .new-link:hover {
+            background-color: var(--clr-accent);
+            color: var(--clr-bg);
+        }
+
         .fileentry:nth-child(odd) {
             background-color: var(--clr-bg2);
         }
@@ -286,6 +335,10 @@
             align-items: stretch;
         }
 
+        .mb-half {
+            margin-bottom: 0.5rem;
+        }
+
         .mb-1 {
             margin-bottom: 1rem;
         }
@@ -313,6 +366,20 @@
 
         .flex-w-full > * {
             flex: 1 0 auto;
+        }
+
+        [v-cloak] {
+            display: none;
+        }
+
+        .relative {
+            position: relative;
+        }
+
+        .abs-top-right {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
         }
     </style>
 </body>

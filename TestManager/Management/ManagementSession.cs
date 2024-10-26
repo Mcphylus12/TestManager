@@ -40,7 +40,7 @@ public class ManagementSession
                 throw new NotSupportedException("need to supploy a path for bulk");
             }
 
-            return _fileFinder.GetMatchingTestFiles(path).Select(fi => new Entry("testfile", fi.Name, Path.GetRelativePath(_root.FullName, fi.Directory.FullName).Replace('\\', '/')));
+            return _fileFinder.GetMatchingTestFiles(path, true).Select(fi => new Entry(fi.Name.EndsWith(".tsjson") ? "testfile" : "file", fi.Name, Path.GetRelativePath(_root.FullName, fi.Directory.FullName).Replace('\\', '/')));
         }
         throw new NotSupportedException("unsupported mode");
     }
@@ -75,6 +75,34 @@ public class ManagementSession
         var tests = await _loader.LoadTests(files);
         var result = await _runner.RunTests(tests);
         return result.ToJson()!;
+    }
+
+    internal void DeleteTestFile(string file)
+    {
+        if (file.Contains("..") || !file.EndsWith(".tsjson"))
+        {
+            throw new Exception("Invalid file to delete: " + file);
+        }
+
+        File.Delete(Path.Combine(_root.FullName, file));
+    }
+
+    internal bool CreateTestFile(Entry newFile)
+    {
+        if (newFile.Path.Contains("..") || newFile.Name.Contains(".."))
+        {
+            throw new Exception("Invalid file to create: " + newFile.Path);
+        }
+
+        var targetNewFile = new FileInfo(Path.Combine(_root.FullName, newFile.Path, newFile.Name + ".tsjson"));
+
+        if (targetNewFile.Exists)
+        {
+            return false;
+        }
+
+        File.WriteAllText(targetNewFile.FullName, "[]");
+        return true;
     }
 }
 
