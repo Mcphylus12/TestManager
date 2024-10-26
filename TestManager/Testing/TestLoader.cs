@@ -112,6 +112,7 @@ public class TsJsonContract
     public string? File { get; set; }
     public string? Name { get; set; }
     public required JsonElement Parameters { get; set; }
+    public Dictionary<string, string>? IntegrationParameter { get; set; }
 }
 
 public class Test<T> : ITest

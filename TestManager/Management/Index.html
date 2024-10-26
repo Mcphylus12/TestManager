@@ -42,9 +42,16 @@
 
                     <button class="float-right" @click="removeHandler(index)">Remove</button>
                 </h4>
+                <details>
+                <summary>Test Integration Information</summary>
+                <div v-for="param in activeFile.integrationParameters">
+                    <div> {{ param }}</div>
+                    <input type="text" v-model="handler.testIntegrationParameters[param]" />
+                </div>
+                </details>
                 <div v-for="param in handler.parameters">
                     <div> {{ param.name }}</div>
-                    <textarea type="text" v-model="param.value" ></textarea>
+                    <textarea type="text" v-model="param.value"></textarea>
                 </div>
             </div>
         </div>
@@ -72,14 +79,17 @@
             this.runResults = `
             TODOs
             - Allow bulk running from UI
-            - Test Case integration configured got config file in root directory
+
             - Copy to clipboard for run result
             - Tabs on result section to view result friendlier (more per line)
+
             - Readme documentation
+
             - Create/Delete tsjson files for normal files
             - Basic text editor for text files
             - Copy full path of file on disk to clipboard
-            -secret loading for bulk and manage to allow for test integrations and handlers that need it
+            
+            - secret loading for bulk and manage to allow for test integrations and handlers that need it (pull from env or read from console)
             ` 
           },
           load(file) {

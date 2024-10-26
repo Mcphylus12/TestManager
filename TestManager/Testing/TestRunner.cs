@@ -39,6 +39,8 @@ public class RunResult
         _results = results;
     }
 
+    public IEnumerable<TestResult> TestResults => _results;
+
     public IEnumerable<AssertionResult> Enumerate()
     {
         return _results.SelectMany(r => r.Assertions);

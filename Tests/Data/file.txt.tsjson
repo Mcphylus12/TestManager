@@ -5,13 +5,22 @@
     "Name": "lengthTest",
     "Parameters": {
       "ExpectedLength": "15"
+    },
+    "IntegrationParameter": {
+      "Id": "8",
+      "Description": "length testsss",
+      "Description2": "hidden field"
     }
   },
   {
     "Type": "JSON",
     "File": null,
     "Name": null,
-    "Parameters": {}
+    "Parameters": {},
+    "IntegrationParameter": {
+      "Id": "",
+      "Description": ""
+    }
   },
   {
     "Type": "SHA256",
@@ -19,6 +28,10 @@
     "Name": null,
     "Parameters": {
       "ExpectedHash": "29D173D71F2F75C5E8F5CC4F7B0D8102011BABB865B742EEEF758C591908F9D8"
+    },
+    "IntegrationParameter": {
+      "Id": "",
+      "Description": ""
     }
   }
 ]

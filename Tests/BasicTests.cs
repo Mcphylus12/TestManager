@@ -10,11 +10,12 @@ public class BasicTests
     [Fact]
     public async Task BulkTestWorks()
     {
-        HandlerScanner.AddAssembly(Assembly.GetAssembly(typeof(DummyHandler))!);
+        var loader = new PluginLoader(new DirectoryInfo("."));
+        loader.AddAssembly(Assembly.GetAssembly(typeof(DummyHandler))!);
         using var tw = new StringWriter();
         var ogOut = Console.Out;
         Console.SetOut(tw);
-        await BulkCommand.Run("*", new DirectoryInfo("data"));
+        await BulkCommand.Run("*", new DirectoryInfo("data"), false);
 
         var output = tw.ToString();
 

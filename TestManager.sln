@@ -8,17 +8,19 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4138A306-C855-4615-95F8-279B0706A4B9}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{5ACE817B-FD37-4581-834C-D6786779077F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{D6C59BCD-C506-4DE5-AA17-2B8B9C20C2DA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestManager.PluginLib", "TestManager.PluginLib\TestManager.PluginLib.csproj", "{94AEA037-EFA3-4CB2-8F49-AFC412C49D5F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestManager.PluginLib", "TestManager.PluginLib\TestManager.PluginLib.csproj", "{94AEA037-EFA3-4CB2-8F49-AFC412C49D5F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginDemo", "PluginDemo\PluginDemo.csproj", "{C4DEDDC2-F57E-497C-BC24-7571CB2C4275}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PluginDemo", "PluginDemo\PluginDemo.csproj", "{C4DEDDC2-F57E-497C-BC24-7571CB2C4275}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginDep", "PluginDep\PluginDep.csproj", "{C19218B9-B718-4A0C-BE2C-BAEF394511B3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PluginDep", "PluginDep\PluginDep.csproj", "{C19218B9-B718-4A0C-BE2C-BAEF394511B3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

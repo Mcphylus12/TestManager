@@ -15,25 +15,47 @@ internal class FormGenerator
         _handlers = handlers;
     }
 
-    internal TestForm Generate(List<TsJsonContract> testData)
+    internal TestForm Generate(List<TsJsonContract> testData, ISet<string>? integrationParameters)
     {
         var result = new TestForm()
         {
+            IntegrationParameters = integrationParameters,
             AvailableHandlers = _handlers.Select(kv => GetForm(kv.Key, kv.Value)).ToList(),
             CurrentHandlers = testData.Select(td => new HandlerForm
             {
                 Name = td.Type!,
                 TestName = td.Name,
+                TestIntegrationParameters = PrepareIntegrationParameters(td.IntegrationParameter, integrationParameters),
                 Parameters = td.Parameters.EnumerateObject().Select(o => new ConfigInput()
                 {
                     Name = o.Name,
                     Value = o.Value.GetString(),
                     Type = GetType(o.Value.ValueKind)
-                }).ToList()
+                }).ToList(),
             }).ToList()
         };
 
         return result;
+    }
+
+    private static Dictionary<string, string>? PrepareIntegrationParameters(Dictionary<string, string>? existingIntegrationParameters, ISet<string>? availableIntegrationParameters)
+    {
+        if (availableIntegrationParameters is null)
+        {
+            return existingIntegrationParameters;
+        }
+
+        existingIntegrationParameters ??= new Dictionary<string, string>();
+
+        foreach (var item in availableIntegrationParameters)
+        {
+            if (!existingIntegrationParameters.ContainsKey(item))
+            {
+                existingIntegrationParameters[item] = string.Empty;
+            }
+        }
+
+        return existingIntegrationParameters;
     }
 
     private string GetType(JsonValueKind valueKind)
@@ -57,7 +79,8 @@ internal class FormGenerator
             {
                 Type = item.Name,
                 Name = string.IsNullOrWhiteSpace(item.TestName) ? null : item.TestName,
-                Parameters = JsonSerializer.SerializeToElement(item.Parameters.ToDictionary(ci => ci.Name, ci => ci.Value))
+                Parameters = JsonSerializer.SerializeToElement(item.Parameters.ToDictionary(ci => ci.Name, ci => ci.Value)),
+                IntegrationParameter = item.TestIntegrationParameters
             });
         }
 

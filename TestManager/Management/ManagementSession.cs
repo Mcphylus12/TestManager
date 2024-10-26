@@ -8,15 +8,17 @@ namespace TestManager.Management;
 public class ManagementSession
 {
     private readonly DirectoryInfo _root;
+    private readonly ITestResultIntegrator? _integrator;
     private readonly FileFinder _fileFinder;
     private readonly JsonSerializerOptions _options;
     private readonly TestLoader _loader;
     private readonly FormGenerator _formGenerator;
     private readonly TestRunner _runner;
 
-    public ManagementSession(DirectoryInfo root, Dictionary<string, ITestHandler> handlers)
+    public ManagementSession(DirectoryInfo root, Dictionary<string, ITestHandler> handlers, ITestResultIntegrator? integrator)
     {
         _root = root;
+        _integrator = integrator;
         _fileFinder = new FileFinder(root);
         _options = new JsonSerializerOptions { WriteIndented = true };
         _loader = new TestLoader(handlers, root);
@@ -33,7 +35,7 @@ public class ManagementSession
     {
         var path = Path.Combine(_root.FullName, file);
         var testData = await TestLoader.LoadTestFile(new FileInfo(path));
-        return _formGenerator.Generate(testData);
+        return _formGenerator.Generate(testData, _integrator?.FieldDefinitions);
     }
 
     public async Task Save(string file, HandlerForm[] newData)
@@ -47,6 +49,9 @@ public class ManagementSession
     {
         var tests = await _loader.LoadTests([new FileInfo(Path.Combine(_root.FullName, file))]);
         var result = await _runner.RunTests(tests);
+
+        await (_integrator?.SubmitResults(result.TestResults) ?? Task.CompletedTask);
+
         return result.ToJson()!;
     }
 }
@@ -56,6 +61,7 @@ public class TestForm
     public required List<HandlerForm> AvailableHandlers { get; set; }
 
     public required List<HandlerForm> CurrentHandlers { get; set; }
+    public ISet<string>? IntegrationParameters { get; set; }
 }
 
 public class HandlerForm
@@ -63,6 +69,7 @@ public class HandlerForm
     public required string Name { get; set; }
     public required List<ConfigInput> Parameters { get; set; }
     public string? TestName { get; set; }
+    public Dictionary<string, string>? TestIntegrationParameters { get; set; }
 }
 
 public class ConfigInput
