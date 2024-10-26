@@ -16,6 +16,7 @@ public class ManageCommand
 
     private static async Task Run(DirectoryInfo info)
     {
+        HandlerScanner.LoadPlugins(info);
         var manSession = new ManagementSession(info, HandlerScanner.GetHandlers());
         await ManagementHost.Run(manSession);
     }

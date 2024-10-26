@@ -1,18 +1,24 @@
 [
   {
+    "Type": "FileLength",
+    "File": null,
+    "Name": null,
+    "Parameters": {
+      "ExpectedLength": "15"
+    }
+  },
+  {
+    "Type": "JSON",
+    "File": null,
+    "Name": null,
+    "Parameters": {}
+  },
+  {
     "Type": "SHA256",
     "File": null,
     "Name": null,
     "Parameters": {
       "ExpectedHash": "29D173D71F2F75C5E8F5CC4F7B0D8102011BABB865B742EEEF758C591908F9D8"
-    }
-  },
-  {
-    "Type": "len",
-    "File": null,
-    "Name": null,
-    "Parameters": {
-      "ExpectedLength": "15"
     }
   }
 ]

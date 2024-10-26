@@ -1,4 +1,4 @@
-﻿namespace Toolkit.FileTester;
+﻿namespace TestManager.PluginLib;
 
 public class TestException : Exception
 {

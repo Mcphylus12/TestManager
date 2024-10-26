@@ -5,9 +5,6 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
-    <PublishSingleFile>true</PublishSingleFile>
-    <SelfContained>true</SelfContained>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +14,10 @@
 
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\TestManager.PluginLib\TestManager.PluginLib.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

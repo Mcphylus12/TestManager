@@ -1,4 +1,7 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using TestManager.PluginLib;
 
 namespace TestManager.Testing;
 internal class TestLoader
@@ -76,7 +79,7 @@ internal class TestLoader
             string testPath = Path.GetRelativePath(_root.FullName, filePath ?? adjacentFile);
             var handler = _handlers[s.Type];
             var paramType = handler.GetType().GetInterfaces().Single(t => t.Name == "ITestHandler`1").GetGenericArguments()[0];
-            var pparams = (ITestParameters)Activator.CreateInstance(typeof(TestParameters<>).MakeGenericType(paramType))!;
+            var pparams = (ITestParametersSetup)Activator.CreateInstance(typeof(TestParameters<>).MakeGenericType(paramType))!;
             pparams.Setup(s, i, testPath, filePath, adjacentFile, _loader);
 
             return (ITest)Activator.CreateInstance(typeof(Test<>).MakeGenericType(paramType), handler, pparams)!;
@@ -157,4 +160,43 @@ internal class FailedTest : ITest
         result.AddResult("failed_run", false, _exception.ToString());
         return Task.CompletedTask;
     }
+}
+
+public class TestParameters<T> : ITestParametersSetup, ITestParameters<T>
+{
+    public byte[]? File { get; set; }
+    public required string FileName { get; set; }
+    public required string TestName { get; set; }
+    public required T Parameters { get; set; }
+
+    [MemberNotNull(nameof(File))]
+    public void EnsureFile()
+    {
+        if (File is null || File.Length == 0)
+        {
+            throw new TestException("Test Requires a loaded file");
+        }
+    }
+
+    [MemberNotNull(nameof(FileName))]
+    public void EnsureFileName()
+    {
+        if (FileName is null || FileName.Length == 0)
+        {
+            throw new TestException("Test Requires a filename");
+        }
+    }
+
+    private static readonly JsonSerializerOptions _options = new JsonSerializerOptions() { NumberHandling = JsonNumberHandling.AllowReadingFromString };
+    public void Setup(TsJsonContract s, int i, string testPath, string? filePath, string adjacentFile, FileLoader fl)
+    {
+        FileName = filePath ?? adjacentFile;
+        Parameters = s.Parameters.Deserialize<T>(_options)!;
+        TestName = s.Name ?? $"{testPath}:{i}";
+        File = fl.Load(filePath ?? adjacentFile);
+    }
+}
+public interface ITestParametersSetup
+{
+    void Setup(TsJsonContract s, int i, string testPath, string? filePath, string adjacentFile, FileLoader fl);
 }

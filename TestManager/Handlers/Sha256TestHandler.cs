@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography;
+using TestManager.PluginLib;
 using TestManager.Testing;
 
 namespace TestManager.Handlers;
@@ -6,7 +7,7 @@ internal class Sha256TestHandler : ITestHandler<HashConfig>
 {
     public string Type => "SHA256";
 
-    public Task RunTest(TestParameters<HashConfig> testParameters, TestResult testResult)
+    public Task RunTest(ITestParameters<HashConfig> testParameters, TestResult testResult)
     {
         testParameters.EnsureFile();
         var hash = SHA256.HashData(testParameters.File);

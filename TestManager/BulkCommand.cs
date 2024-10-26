@@ -20,6 +20,7 @@ public class BulkCommand
 
     public static async Task Run(string? pattern, DirectoryInfo rootDir)
     {
+        HandlerScanner.LoadPlugins(rootDir);
         var fileFinder = new FileFinder(rootDir);
         var testLoader = new TestLoader(HandlerScanner.GetHandlers(), rootDir);
         var testRunner = new TestRunner();

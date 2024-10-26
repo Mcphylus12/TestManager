@@ -2,11 +2,11 @@
   "profiles": {
     "Manage": {
       "commandName": "Project",
-      "commandLineArgs": "manage -r \"../../../../../Tests/Data\""
+      "commandLineArgs": "manage -r \"../../../../Tests/Data\""
     },
     "Bulk": {
       "commandName": "Project",
-      "commandLineArgs": "bulk -r \"../../../../../Tests/Data\""
+      "commandLineArgs": "bulk -r \"../../../../Tests/Data\""
     }
   }
 }

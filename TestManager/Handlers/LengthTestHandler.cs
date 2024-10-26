@@ -1,11 +1,11 @@
-﻿using TestManager.Testing;
+﻿using TestManager.PluginLib;
 
 namespace TestManager.Handlers;
 internal class LengthTestHandler : ITestHandler<LengthData>
 {
-    public string Type => "len";
+    public string Type => "FileLength";
 
-    public Task RunTest(TestParameters<LengthData> testParameters, TestResult testResult)
+    public Task RunTest(ITestParameters<LengthData> testParameters, TestResult testResult)
     {
         testParameters.EnsureFile();
 

@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
-using Toolkit.FileTester;
-using static TestManager.Testing.TestResult;
+using TestManager.PluginLib;
+using static TestManager.PluginLib.TestResult;
 
 namespace TestManager.Testing;
 
@@ -30,26 +30,6 @@ internal class TestRunner
     }
 }
 
-public class TestResult
-{
-    private readonly string _testName;
-    public List<AssertionResult> Assertions { get; }
-
-    public TestResult(string testName)
-    {
-        Assertions = new List<AssertionResult>();
-        _testName = testName;
-    }
-
-    public TestResult AddResult(string assertionName, bool isSuccess, string? message = null)
-    {
-        Assertions.Add(new AssertionResult(_testName, assertionName, isSuccess, message));
-        return this;
-    }
-
-    public record class AssertionResult(string TestName, string AssertionName, bool IsSuccess, string? Message);
-}
-
 public class RunResult
 {
     private readonly List<TestResult> _results;
@@ -67,25 +47,5 @@ public class RunResult
     public string? ToJson()
     {
         return JsonSerializer.Serialize(_results);
-    }
-}
-
-public static class ResultExtensions
-{
-    public static TestResult AddResult(this TestResult result, string assertionName, object expected, object actual)
-    {
-        var success = expected == actual;
-        var message = success ? null : $"Actual was: {actual}";
-
-        return result.AddResult(assertionName, success, message);
-    }
-
-    public static TestResult AddResult<T>(this TestResult result, string assertionName, T expected, T actual)
-    where T : IEquatable<T>
-    {
-        var success = expected.Equals(actual);
-        var message = success ? null : $"Actual was: {actual}";
-
-        return result.AddResult(assertionName, success, message);
     }
 }

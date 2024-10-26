@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using FluentAssertions;
 using TestManager;
-using TestManager.Testing;
+using TestManager.PluginLib;
 
 namespace Tests;
 
@@ -28,7 +28,7 @@ public class DummyHandler : ITestHandler<DummyConfig>
 {
     public string Type => "dummy";
 
-    public Task RunTest(TestParameters<DummyConfig> testParameters, TestResult testResult)
+    public Task RunTest(ITestParameters<DummyConfig> testParameters, TestResult testResult)
     {
         testResult.AddResult("dummy", true, $"msg {testParameters.Parameters.DummyValue}");
         return Task.CompletedTask;
