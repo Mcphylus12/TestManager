@@ -2,7 +2,7 @@
   {
     "Type": "FileLength",
     "File": null,
-    "Name": null,
+    "Name": "lengthTest",
     "Parameters": {
       "ExpectedLength": "15"
     }

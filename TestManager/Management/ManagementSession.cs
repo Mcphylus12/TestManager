@@ -62,6 +62,7 @@ public class HandlerForm
 {
     public required string Name { get; set; }
     public required List<ConfigInput> Parameters { get; set; }
+    public string? TestName { get; set; }
 }
 
 public class ConfigInput

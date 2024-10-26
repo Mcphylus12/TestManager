@@ -23,6 +23,7 @@ internal class FormGenerator
             CurrentHandlers = testData.Select(td => new HandlerForm
             {
                 Name = td.Type!,
+                TestName = td.Name,
                 Parameters = td.Parameters.EnumerateObject().Select(o => new ConfigInput()
                 {
                     Name = o.Name,
@@ -55,6 +56,7 @@ internal class FormGenerator
             result.Add(new TsJsonContract
             {
                 Type = item.Name,
+                Name = string.IsNullOrWhiteSpace(item.TestName) ? null : item.TestName,
                 Parameters = JsonSerializer.SerializeToElement(item.Parameters.ToDictionary(ci => ci.Name, ci => ci.Value))
             });
         }

@@ -38,7 +38,7 @@
 
             <div class="handler" v-for="(handler, index) in activeFile.currentHandlers">
                 <h4>
-                    {{ handler.name }}
+                    {{ handler.name }}: <input type="text" v-model="handler.testName" />
 
                     <button class="float-right" @click="removeHandler(index)">Remove</button>
                 </h4>
@@ -79,6 +79,7 @@
             - Create/Delete tsjson files for normal files
             - Basic text editor for text files
             - Copy full path of file on disk to clipboard
+            -secret loading for bulk and manage to allow for test integrations and handlers that need it
             ` 
           },
           load(file) {
