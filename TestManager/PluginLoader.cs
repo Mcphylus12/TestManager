@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.Json;
+using Serilog;
 using TestManager.PluginLib;
 
 namespace TestManager;
@@ -27,7 +28,7 @@ public class PluginLoader
 
         return types.Select(t =>
         {
-            Console.WriteLine("Loading TestHandler: " + t.FullName);
+            Log.Debug("Loading TestHandler: " + t.FullName);
             return (ITestHandler)Activator.CreateInstance(t)!;
         }).ToDictionary(t => t.Type, t => t);
     }
@@ -74,13 +75,13 @@ public class PluginLoader
             var plugins = pluginsFolder.EnumerateFiles().Select(p => Assembly.LoadFrom(p.FullName));
             foreach (var item in plugins)
             {
-                Console.WriteLine("Loading " + item.FullName);
+                Log.Debug("Loading " + item.FullName);
                 _assemblies.Add(item);
             }
         }
         else
         {
-            Console.WriteLine("Skipping plugins");
+            Log.Debug("Skipping plugins");
         }
 
         //static Assembly CurrentDomain_AssemblyResolve(object? sender, ResolveEventArgs args)

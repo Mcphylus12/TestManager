@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Serilog;
 using TestManager.FileTraversal;
 
 namespace TestManager.Management;
@@ -12,7 +14,8 @@ public static class ManagementHost
     public static async Task Run(ManagementSession managementSession)
     {
         var builder = WebApplication.CreateBuilder([]);
-
+        builder.Logging.ClearProviders();
+        builder.Logging.AddProvider(new StringLoggerProvider());
         builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
         var app = builder.Build();
@@ -30,5 +33,51 @@ public static class ManagementHost
         app.MapPost("/testfile", ([FromBody] Entry newFile) => managementSession.CreateTestFile(newFile) ? Results.Ok() : Results.Conflict());
 
         await app.RunAsync();
+    }
+}
+
+internal class StringLoggerProvider : ILoggerProvider
+{
+    public Microsoft.Extensions.Logging.ILogger CreateLogger(string categoryName)
+    {
+        return new StringLogger(categoryName);
+    }
+
+    public void Dispose()
+    {
+        // no op
+    }
+
+    private class StringLogger : Microsoft.Extensions.Logging.ILogger
+    {
+        private string _categoryName;
+
+        public StringLogger(string categoryName)
+        {
+            _categoryName = categoryName;
+        }
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull
+        {
+            return null;
+        }
+
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            return true;
+        }
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            var message = formatter(state, exception);
+            if (message.Contains("listening"))
+            {
+                Serilog.Log.Information(message);
+            }
+            else
+            {
+                Serilog.Log.Debug(message);
+            }
+        }
     }
 }

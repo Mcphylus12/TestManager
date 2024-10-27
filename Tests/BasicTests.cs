@@ -15,7 +15,7 @@ public class BasicTests
         using var tw = new StringWriter();
         var ogOut = Console.Out;
         Console.SetOut(tw);
-        await BulkCommand.Run("*", new DirectoryInfo("data"), false);
+        await BulkCommand.Run("*", new DirectoryInfo("data"), false, 'i');
 
         var output = tw.ToString();
 

@@ -64,7 +64,7 @@ public class RunResult
     {
         foreach (var (test, assertion) in _results.SelectMany(i => i.Assertions, (test, assertion) => (test, assertion)))
         {
-            yield return $"{test.Test.TestName} - {assertion.AssertionName} {(assertion.IsSuccess ? "PASSED" : "FAILED")} {assertion.Message}";
+            yield return $"{test.Test.TestFilePath} - {test.Test.TestName} - {assertion.AssertionName} {(assertion.IsSuccess ? "PASSED" : "FAILED")} {assertion.Message}";
         }
     }
 }
