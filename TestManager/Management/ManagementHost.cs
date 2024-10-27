@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,16 +14,16 @@ public static class ManagementHost
 {
     public static async Task Run(ManagementSession managementSession)
     {
+        Log.Information("Running on http://localhost:8080");
         var builder = WebApplication.CreateBuilder([]);
         builder.Logging.ClearProviders();
         builder.Logging.AddProvider(new StringLoggerProvider());
         builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
-
+        builder.WebHost.UseSetting(WebHostDefaults.HttpPortsKey, "8080");
         var app = builder.Build();
 
         app.UseCors();
         var site = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Management/Index.html"));
-
         app.MapGet("/", () => Results.Content(site, MediaTypeNames.Text.Html));
         app.MapGet("/get-files", (string? path, string mode) => managementSession.GetFiles(mode, path));
         app.MapPost("/run", (string file) => managementSession.Run(file));
@@ -70,14 +71,7 @@ internal class StringLoggerProvider : ILoggerProvider
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
             var message = formatter(state, exception);
-            if (message.Contains("listening"))
-            {
-                Serilog.Log.Information(message);
-            }
-            else
-            {
-                Serilog.Log.Debug(message);
-            }
+            Serilog.Log.Debug(message);
         }
     }
 }
