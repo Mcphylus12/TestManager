@@ -59,22 +59,25 @@ public class ManagementSession
         await File.WriteAllTextAsync(path, JsonSerializer.Serialize(contracts, _options));
     }
 
-    public async Task<string> Run(string file)
+    public async Task<IEnumerable<string>> Run(string file)
     {
         var tests = await _loader.LoadTests([new FileInfo(Path.Combine(_root.FullName, file))]);
         var result = await _runner.RunTests(tests);
 
-        await (_integrator?.SubmitResults(result.TestResults) ?? Task.CompletedTask);
+        await (_integrator?.SubmitResults(result) ?? Task.CompletedTask);
 
-        return result.ToJson()!;
+        return result.ToConsoleOutput()!;
     }
 
-    internal async Task<string> BulkRun(string pattern)
+    internal async Task<IEnumerable<string>> BulkRun(string pattern)
     {
         var files = _fileFinder.GetMatchingTestFiles(pattern);
         var tests = await _loader.LoadTests(files);
         var result = await _runner.RunTests(tests);
-        return result.ToJson()!;
+
+        await (_integrator?.SubmitResults(result) ?? Task.CompletedTask);
+
+        return result.ToConsoleOutput()!;
     }
 
     internal void DeleteTestFile(string file)

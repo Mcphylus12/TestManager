@@ -22,5 +22,5 @@ public interface ITestResultIntegrator
     }
     abstract static ITestResultIntegrator Create(Dictionary<string, string>? config, ISecretLoader secretLoader);
     ISet<string> FieldDefinitions { get; }
-    Task SubmitResults(IEnumerable<TestResult> results);
+    Task SubmitResults(RunResult results);
 }

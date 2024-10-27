@@ -1,6 +1,5 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using System.CommandLine;
-using System.Reflection;
 using TestManager;
 
 var root = new RootCommand();

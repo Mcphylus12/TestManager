@@ -25,8 +25,8 @@
                 Pattern: <input type="text" v-model="currentPath" />
             </h3>
             <div class="button-group flex-w-full">
-                <button @click="getFiles()">Load</button>
-                <button @click="bulkRun()">Run</button>
+                <button @click="getFiles()">Load Pattern</button>
+                <button @click="bulkRun()">Run Pattern</button>
             </div>
             <div class="fileentry" :class="file.type" v-for="file in files" @click="load(file)">
                 [{{ file.type }}]<span class="name">{{ file.path }}/{{ file.name }}</span><span v-if="file.type == 'file'" class="new-link" @click="createTestFile(file)">create test file</span>
@@ -98,14 +98,9 @@
             this.getFiles();
             this.runResults = `
             TODOs
-
-            - Tabs on result section to view result friendlier (more per line)
-
             - Readme documentation
 
             - Basic text editor for text files
-
-            - test information available inside result for better verbosity for integrators
             ` 
           },
           load(file) {

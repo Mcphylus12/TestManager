@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "Type": "FileLength",
+    "Name": "lengtTests",
+    "Parameters": {
+      "ExpectedLength": "10"
+    },
+    "IntegrationParameter": null
+  }
+]

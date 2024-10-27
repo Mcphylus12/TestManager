@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json;
 using TestManager.PluginLib;
 
 namespace TestManager.Testing;
@@ -9,14 +7,14 @@ internal class TestLoader
     private readonly Dictionary<string, ITestHandler> _handlers;
     private readonly DirectoryInfo _root;
     private readonly ISecretLoader _secretLoader;
-    private readonly FileLoader _loader;
+    private readonly FileLoader _fileLoader;
 
     public TestLoader(Dictionary<string, ITestHandler> handlers, DirectoryInfo root, ISecretLoader secretLoader)
     {
         _handlers = handlers;
         _root = root;
         _secretLoader = secretLoader;
-        _loader = new FileLoader();
+        _fileLoader = new FileLoader();
     }
 
     public async Task<IEnumerable<ITest>> LoadTests(IEnumerable<FileInfo> testFiles)
@@ -24,14 +22,25 @@ internal class TestLoader
         var tests = new List<ITest>();
         foreach (var file in testFiles)
         {
-            var testConfigurations = await LoadTestFile(file);
-            var adjacentFile = file.FullName[0..^7];
-
-            int i = 1;
-            foreach (var item in testConfigurations)
+            try
             {
-                tests.Add(CreateRunner(item, i, adjacentFile));
-                i++;
+                var testConfigurations = await LoadTestFile(file);
+
+                foreach (var (testConfiguration, i) in testConfigurations.Select((testConfiguration, i) => (testConfiguration, i)))
+                {
+                    try
+                    {
+                        tests.Add(CreateTest(testConfiguration, i, file));
+                    }
+                    catch (TestLoadException ex)
+                    {
+                        tests.Add(ex.AsTest());
+                    }
+                }
+            }
+            catch (TestLoadException ex)
+            {
+                tests.Add(ex.AsTest());
             }
         }
 
@@ -40,168 +49,86 @@ internal class TestLoader
 
     public static async Task<List<TsJsonContract>> LoadTestFile(FileInfo file)
     {
-        var fileContents = await File.ReadAllTextAsync(file.FullName);
-        var testJson = JsonDocument.Parse(fileContents);
-        var testConfigurations = LoadTests(testJson);
-        return testConfigurations;
+        try
+        {
+            var fileContents = await File.ReadAllTextAsync(file.FullName);
+            var testJson = JsonDocument.Parse(fileContents);
+            var testConfigurations = LoadTests(testJson);
+            return testConfigurations;
+        }
+        catch (Exception ex)
+        {
+            throw new TestLoadException(file, ex);
+        }
     }
 
     private static List<TsJsonContract> LoadTests(JsonDocument testJson)
     {
-        List<TsJsonContract> tests = new List<TsJsonContract>();
-
-        try
+        if (testJson.RootElement.ValueKind == JsonValueKind.Object)
         {
-            if (testJson.RootElement.ValueKind == JsonValueKind.Object)
-            {
-                tests.Add(testJson.Deserialize<TsJsonContract>()!);
-            }
-            else if (testJson.RootElement.ValueKind == JsonValueKind.Array)
-            {
-                tests.AddRange(testJson.Deserialize<IEnumerable<TsJsonContract>>()!);
-            }
+            return [testJson.Deserialize<TsJsonContract>()!];
         }
-        catch (Exception)
+        else if (testJson.RootElement.ValueKind == JsonValueKind.Array)
         {
-            // TODO: results.Add(new TestResult(file).AddResult("file_load_error", false, ex.ToString()));
+            return [.. testJson.Deserialize<IEnumerable<TsJsonContract>>()!];
         }
-
-        return tests;
+        else
+        {
+            throw new JsonException($"Test Contract root must be object or array. Found: {testJson.RootElement.ValueKind}");
+        }
     }
 
-    private ITest CreateRunner(TsJsonContract s, int i, string adjacentFile)
+    private ITest CreateTest(TsJsonContract testConfiguration, int testNumberInFile, FileInfo testFile)
     {
         try
         {
-            string? filePath = null;
-            if (s.File is not null)
-            {
-                filePath = Path.Combine(Path.GetDirectoryName(adjacentFile)!, s.File);
-            }
-            string testPath = Path.GetRelativePath(_root.FullName, filePath ?? adjacentFile);
-            var handler = _handlers[s.Type];
-            var paramType = handler.GetType().GetInterfaces().Single(t => t.Name == "ITestHandler`1").GetGenericArguments()[0];
-            var pparams = (ITestParametersSetup)Activator.CreateInstance(typeof(TestParameters<>).MakeGenericType(paramType))!;
-            pparams.Setup(s, i, testPath, filePath, adjacentFile, _loader, _secretLoader);
+            var handler = _handlers[testConfiguration.Type];
+            var testParameterType = handler.GetType().GetInterfaces().Single(t => t.Name == "ITestHandler`1").GetGenericArguments()[0];
+            ILoadedTest test = ILoadedTest.Create(testParameterType, _secretLoader, _fileLoader);
+            test.IntegrationParameters = testConfiguration.IntegrationParameter;
+            test.TestFilePath = Path.GetRelativePath(_root.FullName, testFile.FullName);
+            test.FilePath = testFile.GetFileUnderTest();
+            test.TestName = !string.IsNullOrWhiteSpace(testConfiguration.Name) ?
+                testConfiguration.Name :
+                $"{Path.GetRelativePath(_root.FullName, testFile.FullName)}:{testNumberInFile}";
 
-            return (ITest)Activator.CreateInstance(typeof(Test<>).MakeGenericType(paramType), handler, pparams)!;
+            test.SetParameters(testConfiguration.Parameters);
+            test.SetHandler(handler);
+
+            return test;
         }
         catch (Exception ex)
         {
-            return new FailedTest(ex, s.Name ?? s.File, i);
+            throw new TestLoadException(testFile, testConfiguration, testNumberInFile, ex);
         }
     }
-}
 
-public class FileLoader
-{
-    private readonly Dictionary<string, byte[]> _loaded = new Dictionary<string, byte[]>();
-
-    internal byte[]? Load(string v)
+    internal class FileLoader
     {
-        if (!_loaded.ContainsKey(v))
+        private readonly Dictionary<string, byte[]?> _loaded = [];
+
+        internal byte[]? Load(string v)
         {
-            _loaded[v] = File.ReadAllBytes(v);
-        }
+            try
+            {
+                if (!_loaded.TryGetValue(v, out var value))
+                {
+                    value = File.ReadAllBytes(v);
+                    _loaded[v] = value;
+                }
 
-        return _loaded[v];
-    }
-}
-
-public class TsJsonContract
-{
-    public required string Type { get; set; }
-    public string? File { get; set; }
-    public string? Name { get; set; }
-    public required JsonElement Parameters { get; set; }
-    public Dictionary<string, string>? IntegrationParameter { get; set; }
-}
-
-public class Test<T> : ITest
-{
-    private readonly ITestHandler<T> _handler;
-    private readonly TestParameters<T> _pparams;
-
-    public Test(ITestHandler<T> handler, TestParameters<T> pparams)
-    {
-        _handler = handler;
-        _pparams = pparams;
-    }
-
-    public string Name => _pparams.TestName;
-
-    public Task Run(TestResult result)
-    {
-        return _handler.RunTest(_pparams, result);
-    }
-}
-
-public interface ITest
-{
-    string Name { get; }
-
-    Task Run(TestResult result);
-}
-
-internal class FailedTest : ITest
-{
-    private readonly Exception _exception;
-    private readonly string? _file;
-    private readonly int _i;
-
-    public string Name => $"{_file}:{_i}";
-
-    public FailedTest(Exception exception, string? file, int i)
-    {
-        _exception = exception;
-        _file = file;
-        _i = i;
-    }
-
-    public Task Run(TestResult result)
-    {
-        result.AddResult("failed_run", false, _exception.ToString());
-        return Task.CompletedTask;
-    }
-}
-
-public class TestParameters<T> : ITestParametersSetup, ITestParameters<T>
-{
-    public byte[]? File { get; set; }
-    public required ISecretLoader SecretLoader { get; set; }
-    public required string FileName { get; set; }
-    public required string TestName { get; set; }
-    public required T Parameters { get; set; }
-
-    [MemberNotNull(nameof(File))]
-    public void EnsureFile()
-    {
-        if (File is null || File.Length == 0)
-        {
-            throw new TestException("Test Requires a loaded file");
+                return value;
+            }
+            catch (FileNotFoundException)
+            {
+                _loaded[v] = null;
+                return null;
+            }
         }
     }
-
-    [MemberNotNull(nameof(FileName))]
-    public void EnsureFileName()
-    {
-        if (FileName is null || FileName.Length == 0)
-        {
-            throw new TestException("Test Requires a filename");
-        }
-    }
-
-    private static readonly JsonSerializerOptions _options = new JsonSerializerOptions() { NumberHandling = JsonNumberHandling.AllowReadingFromString };
-    public void Setup(TsJsonContract s, int i, string testPath, string? filePath, string adjacentFile, FileLoader fl, ISecretLoader secretLoader)
-    {
-        FileName = filePath ?? adjacentFile;
-        Parameters = s.Parameters.Deserialize<T>(_options)!;
-        TestName = s.Name ?? $"{testPath}:{i}";
-        File = fl.Load(filePath ?? adjacentFile);
-        SecretLoader = secretLoader;
-    }
 }
-public interface ITestParametersSetup
+
+public static class FileInfoExtensions
 {
-    void Setup(TsJsonContract s, int i, string testPath, string? filePath, string adjacentFile, FileLoader fl, ISecretLoader secretLoader);
+    public static string GetFileUnderTest(this FileInfo testFile) => testFile.FullName[0..^7];
 }

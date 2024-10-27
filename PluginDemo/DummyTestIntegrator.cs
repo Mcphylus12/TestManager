@@ -1,4 +1,5 @@
 ﻿using TestManager.PluginLib;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace PluginDemo;
 public class DummyTestIntegrator : ITestResultIntegrator
@@ -14,9 +15,7 @@ public class DummyTestIntegrator : ITestResultIntegrator
 
     public ISet<string> FieldDefinitions { get; } = new HashSet<string>
     {
-        "Id",
-        "Description",
-        "Description2"
+        "TestCaseId",
     };
 
     public static ITestResultIntegrator Create(Dictionary<string, string>? config, ISecretLoader secretLoader)
@@ -24,18 +23,20 @@ public class DummyTestIntegrator : ITestResultIntegrator
         return new DummyTestIntegrator(config, secretLoader);
     }
 
-    public Task SubmitResults(IEnumerable<TestResult> results)
+    public Task SubmitResults(RunResult results)
     {
         var secret = _secretLoader.LoadSecret("DummySecret");
 
         Console.WriteLine("Secret Loaded: " + secret);
 
         Console.WriteLine("INTEGRATION RESULTS -- START");
-        foreach (var item in results.SelectMany(t => t.Assertions))
+        foreach (var (test, assertion) in results.TestResults.SelectMany(i => i.Assertions, (test, assertion) => (test, assertion)))
         {
-            Console.WriteLine(item.ToString());
+            Console.WriteLine($"[{test.Test.IntegrationParameters?.GetValueOrDefault("TestCaseId")?.ToString()}]{test.Test.TestName} - {assertion.AssertionName} PASSED:{assertion.IsSuccess} {assertion.Message}");
         }
         Console.WriteLine("INTEGRATION RESULTS -- END");
+
+        Console.WriteLine(results.ToJson());
         return Task.CompletedTask;
     }
 }

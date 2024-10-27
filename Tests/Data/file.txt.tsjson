@@ -1,7 +1,6 @@
 [
   {
     "Type": "FileLength",
-    "File": null,
     "Name": "lengthTest",
     "Parameters": {
       "ExpectedLength": "16"
@@ -9,23 +8,23 @@
     "IntegrationParameter": {
       "Id": "8",
       "Description": "length testsss",
-      "Description2": "hidden field"
+      "Description2": "hidden field",
+      "TestCaseId": "100"
     }
   },
   {
     "Type": "JSON",
-    "File": null,
     "Name": null,
     "Parameters": {},
     "IntegrationParameter": {
       "Id": "",
       "Description": "",
-      "Description2": ""
+      "Description2": "",
+      "TestCaseId": ""
     }
   },
   {
     "Type": "SHA256",
-    "File": null,
     "Name": null,
     "Parameters": {
       "ExpectedHash": "29D173D71F2F75C5E8F5CC4F7B0D8102011BABB865B742EEEF758C591908F9D8"
@@ -33,7 +32,8 @@
     "IntegrationParameter": {
       "Id": "",
       "Description": "",
-      "Description2": ""
+      "Description2": "",
+      "TestCaseId": ""
     }
   }
 ]

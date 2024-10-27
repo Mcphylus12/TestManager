@@ -21,17 +21,17 @@ public class BulkCommand
     public static async Task Run(string? pattern, DirectoryInfo rootDir, bool? submit)
     {
         var secretLoader = new SecretLoader();
-        var loader = new PluginLoader(rootDir, secretLoader);
+        var pluginLoader = new PluginLoader(rootDir, secretLoader);
         var fileFinder = new FileFinder(rootDir);
-        var testLoader = new TestLoader(loader.GetHandlers(), rootDir, secretLoader);
+        var testLoader = new TestLoader(pluginLoader.GetHandlers(), rootDir, secretLoader);
         var testRunner = new TestRunner();
         var files = pattern is null ? fileFinder.GetAllTestFiles() : fileFinder.GetMatchingTestFiles(pattern);
         var tests = await testLoader.LoadTests(files);
         var result = await testRunner.RunTests(tests);
 
-        if (submit.GetValueOrDefault() && loader.GetIntegrator(out var integrator))
+        if (submit.GetValueOrDefault() && pluginLoader.GetIntegrator(out var integrator))
         {
-            await integrator.SubmitResults(result.TestResults);
+            await integrator.SubmitResults(result);
         }
 
         Console.WriteLine(result.ToJson());

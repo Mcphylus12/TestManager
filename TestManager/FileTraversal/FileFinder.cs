@@ -22,7 +22,7 @@ internal class FileFinder
     {
         var searchDir = path is null ? _root : new DirectoryInfo(Path.Combine(_root.FullName, path));
 
-        return searchDir.GetDirectories().Select(fi => new Entry("folder", fi.Name, string.Empty)).Union(searchDir.GetFiles().Select(fi => new Entry(fi.Name.EndsWith(".tsjson") ? "testfile" : "file", fi.Name, Path.GetRelativePath(_root.FullName, fi.Directory!.FullName).Replace('\\', '/'))));
+        return searchDir.GetDirectories().Where(fi => fi.Name != ".config").Select(fi => new Entry("folder", fi.Name, string.Empty)).Union(searchDir.GetFiles().Select(fi => new Entry(fi.Name.EndsWith(".tsjson") ? "testfile" : "file", fi.Name, Path.GetRelativePath(_root.FullName, fi.Directory!.FullName).Replace('\\', '/'))));
     }
 
     internal IEnumerable<FileInfo> GetMatchingTestFiles(string pattern, bool includeFiles = false)
