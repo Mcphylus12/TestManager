@@ -10,7 +10,7 @@
     },
     "ManageWithEnv": {
       "commandName": "Project",
-      "commandLineArgs": "manage -s -r \"../../../../Tests/Data\"",
+      "commandLineArgs": "manage -v d -s -r \"../../../../Tests/Data\"",
       "environmentVariables": {
         "TestManager_DummySecret": "testfromEnv"
       }

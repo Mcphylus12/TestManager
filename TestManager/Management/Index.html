@@ -111,7 +111,7 @@
                 } else if (this.mode == "bulk") {
                     this.loadedFile = file.path + "/" + file.name;
                 }
-                fetch("http://localhost:5000/load?file="+this.loadedFile)
+                fetch("http://localhost:8080/load?file="+this.loadedFile)
                     .then((data) => data.json())
                     .then(res => this.activeFile = res);
             }
@@ -128,7 +128,7 @@
             const myHeaders = new Headers();
             myHeaders.append("Content-Type", "application/json");
 
-            fetch("http://localhost:5000/save?file="+this.loadedFile, 
+            fetch("http://localhost:8080/save?file="+this.loadedFile, 
                 {
                     method: "POST",
                     body: JSON.stringify(this.activeFile.currentHandlers),
@@ -136,7 +136,7 @@
                 });
           },
           getFiles() {
-                fetch(`http://localhost:5000/get-files?path=${this.currentPath}&mode=${this.mode}`)
+                fetch(`http://localhost:8080/get-files?path=${this.currentPath}&mode=${this.mode}`)
                     .then((data) => data.json())
                     .then(res => this.files = res);
           },
@@ -157,7 +157,7 @@
             this.activeFile.currentHandlers.splice(index, 1);
           },
           run() {
-            fetch("http://localhost:5000/run?file="+this.loadedFile, 
+            fetch("http://localhost:8080/run?file="+this.loadedFile, 
                 {
                     method: "POST"
                 })                
@@ -165,7 +165,7 @@
                 .then(res => this.runResults = JSON.stringify(res, null, 2));
             },
             bulkRun() {
-                fetch("http://localhost:5000/bulkrun?pattern=" + this.currentPath,
+                fetch("http://localhost:8080/bulkrun?pattern=" + this.currentPath,
                     {
                         method: "POST"
                     })
@@ -173,7 +173,7 @@
                     .then(res => this.runResults = JSON.stringify(res, null, 2));
             },
           cancel() {
-                fetch("http://localhost:5000/load?file="+this.loadedFile)
+                fetch("http://localhost:8080/load?file="+this.loadedFile)
                     .then((data) => data.json())
                     .then(res => this.activeFile = res);
             },
@@ -194,7 +194,7 @@
                 window.navigator.clipboard.writeText(text);
             },
             deleteTestFile() {
-                fetch("http://localhost:5000/testfile?file=" + this.loadedFile,
+                fetch("http://localhost:8080/testfile?file=" + this.loadedFile,
                     {
                         method: "DELETE"
                     })
@@ -207,7 +207,7 @@
                 const myHeaders = new Headers();
                 myHeaders.append("Content-Type", "application/json");
 
-                fetch("http://localhost:5000/testfile", 
+                fetch("http://localhost:8080/testfile", 
                     {
                         method: "POST",
                         body: JSON.stringify(file),

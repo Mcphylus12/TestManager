@@ -1,5 +1,13 @@
 [
   {
+    "Type": "StartsWith",
+    "Name": null,
+    "Parameters": {
+      "Text": "PW"
+    },
+    "IntegrationParameter": null
+  },
+  {
     "Type": "FileLength",
     "Name": "lengthTest",
     "Parameters": {
